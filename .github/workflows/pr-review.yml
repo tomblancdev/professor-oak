@@ -136,6 +136,7 @@ jobs:
         with:
           runCmd: |
             cd /workspace/mcp/professor-oak-mcp
+            npm ci
             npm run build
 
       - name: Check build artifacts

@@ -23,6 +23,7 @@ jobs:
         with:
           runCmd: |
             cd /workspace/mcp/professor-oak-mcp
+            npm ci
             npm run build
             npm run test:run
 
