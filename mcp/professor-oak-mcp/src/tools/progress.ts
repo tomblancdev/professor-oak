@@ -14,7 +14,13 @@ import { calculateRank } from "../services/points.js";
 import type { TopicProgress, LevelRoadmap } from "../types/progress.js";
 import type { TrainerData } from "../types/trainer.js";
 
-const DATA_PATH = process.env.DATA_PATH || "/data";
+/**
+ * Get the data path from environment variable.
+ * Uses lazy evaluation to allow tests to set DATA_PATH before each test.
+ */
+function getDataPath(): string {
+  return process.env.DATA_PATH || "/data";
+}
 
 // Types for handler responses
 interface ProgressResponse {
@@ -469,7 +475,7 @@ export async function getOverallProgressHandler(args: {
 
   // Scan src directory for topics
   try {
-    const srcPath = path.join(DATA_PATH, "src");
+    const srcPath = path.join(getDataPath(), "src");
     const entries = await fs.readdir(srcPath, { withFileTypes: true });
 
     for (const entry of entries) {
