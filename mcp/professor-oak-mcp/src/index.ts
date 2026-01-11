@@ -11,8 +11,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Tool registrations
-// import { registerTopicTools } from "./tools/topic.js";
-// import { registerProgressTools } from "./tools/progress.js";
+import { registerTopicTools } from "./tools/topic.js";
+import { registerProgressTools } from "./tools/progress.js";
 import { registerTrainerTools } from "./tools/trainer.js";
 // import { registerPokedexTools } from "./tools/pokedex.js";
 // import { registerQuizTools } from "./tools/quiz.js";
@@ -26,8 +26,8 @@ const server = new McpServer({
 });
 
 // Register all tools
-// registerTopicTools(server);
-// registerProgressTools(server);
+registerTopicTools(server);
+registerProgressTools(server);
 registerTrainerTools(server);
 // registerPokedexTools(server);
 // registerQuizTools(server);
