@@ -46,7 +46,7 @@ export function registerTopicTools(server: McpServer) {
       }
 
       // Check if topic already exists
-      const topicPath = `src/${name}`;
+      const topicPath = `topics/${name}`;
       if (await fileExists(topicPath)) {
         return jsonResponse({
           success: false,
@@ -119,8 +119,8 @@ export function registerTopicTools(server: McpServer) {
     },
     async ({ topic }) => {
       const topicPath = topic.includes("/")
-        ? `src/${topic.split("/")[0]}/subtopics/${topic.split("/")[1]}`
-        : `src/${topic}`;
+        ? `topics/${topic.split("/")[0]}/subtopics/${topic.split("/")[1]}`
+        : `topics/${topic}`;
 
       const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 
@@ -184,7 +184,7 @@ export function registerTopicTools(server: McpServer) {
       includeProgress: z.boolean().optional().describe("Include completion stats per topic"),
     },
     async ({ includeProgress = false }) => {
-      const srcPath = "src";
+      const srcPath = "topics";
       const topics: TopicListItem[] = [];
 
       try {
@@ -247,7 +247,7 @@ export function registerTopicTools(server: McpServer) {
       level: z.enum(["starter", "beginner", "advanced", "expert"]).describe("Starting level"),
     },
     async ({ topic, level }) => {
-      const topicPath = `src/${topic}`;
+      const topicPath = `topics/${topic}`;
       const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 
       if (!result.success) {
@@ -310,7 +310,7 @@ export function registerTopicTools(server: McpServer) {
       }),
     },
     async ({ topic, level, roadmap }) => {
-      const topicPath = `src/${topic}`;
+      const topicPath = `topics/${topic}`;
       const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 
       if (!result.success) {

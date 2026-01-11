@@ -167,7 +167,7 @@ Pokemon Master    →  10,000 pts
 ## Topic Structure
 
 ```
-src/[topic]/
+topics/[topic]/
 ├── progress.yaml       # MCP managed
 ├── rewards.yaml        # MCP managed
 ├── courses/
