@@ -1,0 +1,12 @@
+# Game state files - must use MCP tools
+trainer.yaml
+pokedex.yaml
+**/progress.yaml
+**/rewards.yaml
+
+# Generated assets
+**/rewards/*.svg
+**/rewards/*.png
+
+# Quiz history
+quiz-history/

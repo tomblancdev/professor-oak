@@ -1,0 +1,19 @@
+# Professor Oak - Trainer Profile
+# DO NOT EDIT DIRECTLY - Use MCP tools
+
+version: 1
+trainer: null
+started_at: null
+total_points: 0
+rank: "Rookie Trainer"
+
+settings:
+  wild_encounters: true
+  notifications: true
+
+achievements:
+  first_pokemon: null
+  first_badge: null
+  first_legendary: null
+
+point_history: []

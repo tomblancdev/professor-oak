@@ -1,0 +1,14 @@
+# Professor Oak - Pokedex
+# DO NOT EDIT DIRECTLY - Use MCP tools
+
+version: 1
+trainer: null
+created_at: null
+
+pokemon: []
+
+stats:
+  total_caught: 0
+  total_evolved: 0
+  legendaries: 0
+  by_topic: {}

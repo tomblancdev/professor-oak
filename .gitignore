@@ -1,15 +1,16 @@
-# Professor Oak - User Data (Local Testing)
-# These files contain user progress and should not be committed
+# Professor Oak - Generated Content
+# Note: trainer.yaml and pokedex.yaml are committed as templates
+# The MCP server manages them, so direct edits will be overwritten
 
-# User data files
-trainer.yaml
-pokedex.yaml
-
-# Quiz history
-quiz-history/
+# Quiz history (generated during usage)
+quiz-history/*.yaml
 
 # Point history
 point-history/
+
+# Topic progress files (generated per topic)
+src/**/progress.yaml
+src/**/rewards.yaml
 
 # Node modules (for MCP server)
 node_modules/
