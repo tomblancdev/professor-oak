@@ -11,6 +11,7 @@
 | `/wild` | Random encounter | Wild Pokemon |
 | `/save` | Save extra learning | Professor Oak |
 | `/extras` | Browse extra learnings | - |
+| `/reset` | Reset progress | Professor Oak |
 
 ---
 
@@ -275,4 +276,110 @@ Tags: #rag #knowledge-graph #llm
    📄 2026-01-05 - Docker secrets       #security
 
 Total: 6 extras | 45 points earned
+```
+
+---
+
+## /reset
+
+```
+/reset [scope] [target] [--keep-points] [--keep-pokemon] [--keep-badges]
+```
+
+**Purpose**: Reset progress at various levels
+
+**Scopes**:
+
+| Scope | Command | Resets |
+|-------|---------|--------|
+| Global | `/reset all` | Everything, fresh start |
+| Topic | `/reset docker` | All docker progress |
+| Level | `/reset docker/beginner` | Just beginner level |
+| Course | `/reset docker/beginner/01-first-container` | Single course |
+
+**Persona**: Professor Oak (with caution)
+
+**Behavior**:
+1. Professor Oak asks for confirmation
+2. Shows preview of what will be reset
+3. Requires explicit "yes" to proceed
+4. Reports what was reset
+
+**Options**:
+| Flag | Effect |
+|------|--------|
+| `--keep-points` | Don't remove earned points |
+| `--keep-pokemon` | Keep caught Pokemon (default) |
+| `--keep-badges` | Don't remove earned badges |
+
+**Example flow**:
+```
+User: /reset docker/beginner
+
+🧑‍🔬 Professor Oak:
+"Hmm, you want to reset your Beginner progress in Docker?
+ Let me check what this would affect..."
+
+┌─────────────────────────────────────────┐
+│ ⚠️  Reset Preview: docker/beginner      │
+│                                         │
+│ Will reset:                             │
+│   📚 3 courses                          │
+│   🏋️ 5 exercises                        │
+│   📝 2 quiz attempts                    │
+│                                         │
+│ Will remove:                            │
+│   ⭐ 175 points                         │
+│   🏅 Cascade Badge                      │
+│                                         │
+│ Will keep:                              │
+│   🐾 5 Pokemon (knowledge preserved)    │
+│                                         │
+│ Are you sure?                           │
+│ [Yes, reset] [No, cancel]               │
+└─────────────────────────────────────────┘
+
+User: Yes, reset
+
+🧑‍🔬 Professor Oak:
+"Done! Your Beginner journey in Docker has been reset.
+ Your Pokemon remember what they learned, but you'll
+ need to prove your knowledge again to earn back
+ that Cascade Badge. Misty awaits your return!"
+
+✅ Reset complete:
+   - 3 courses marked incomplete
+   - 5 exercises marked incomplete
+   - 175 points removed
+   - Cascade Badge removed
+   - 5 Pokemon kept
+```
+
+**Global reset warning**:
+```
+User: /reset all
+
+🧑‍🔬 Professor Oak:
+"A complete reset? That's a big decision, trainer.
+ You'll lose ALL progress across ALL topics..."
+
+⚠️  WARNING: This cannot be undone!
+
+┌─────────────────────────────────────────┐
+│ 🚨 GLOBAL RESET                         │
+│                                         │
+│ Will reset:                             │
+│   📚 15 courses across 3 topics         │
+│   🏋️ 22 exercises                       │
+│   📝 8 quiz attempts                    │
+│                                         │
+│ Will remove:                            │
+│   ⭐ 1,250 points (Rank: Rookie)        │
+│   🏅 3 badges                           │
+│                                         │
+│ Will keep:                              │
+│   🐾 42 Pokemon                         │
+│                                         │
+│ Type "RESET ALL" to confirm:            │
+└─────────────────────────────────────────┘
 ```

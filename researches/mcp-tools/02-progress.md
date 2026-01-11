@@ -10,6 +10,7 @@
 | `checkLevelComplete` | Check if level requirements met |
 | `getLevelRequirements` | What's needed to complete a level |
 | `getNextAction` | Smart suggestion for next step |
+| `resetProgress` | Reset completion status |
 
 ---
 
@@ -330,4 +331,129 @@ roadmap:
     { type: "quiz", message: "Or take a quiz on what you've learned" }
   ]
 }
+```
+
+---
+
+## `resetProgress`
+
+**Purpose**: Reset completion status at various scopes (global, topic, level, or course)
+
+**Input**:
+```typescript
+{
+  scope: "global" | "topic" | "level" | "course",
+  topic?: string,           // Required for topic/level/course scope
+  level?: string,           // Required for level/course scope
+  courseId?: string,        // Required for course scope
+  options?: {
+    keepPoints?: boolean,   // Keep earned points (default: false)
+    keepPokemon?: boolean,  // Keep caught Pokemon (default: true)
+    keepBadges?: boolean,   // Keep earned badges (default: false)
+    confirm?: boolean       // Must be true to execute (safety)
+  }
+}
+```
+
+**Scope behaviors**:
+
+| Scope | Resets | Example |
+|-------|--------|---------|
+| `global` | All topics, all progress | Fresh start |
+| `topic` | Single topic, all levels | Reset docker only |
+| `level` | Single level in topic | Reset docker/beginner |
+| `course` | Single course + its exercises | Reset 01-first-container |
+
+**Validations**:
+- `confirm: true` is required to execute
+- Topic/level/course must exist
+- Warns if resetting earned badges
+
+**Side effects**:
+1. Updates `progress.yaml` (marks items as incomplete)
+2. Optionally removes points from `trainer.yaml`
+3. Optionally removes badges from `rewards.yaml`
+4. Does NOT delete course/exercise content files
+5. Does NOT remove Pokemon by default (knowledge earned)
+
+**Returns**:
+```typescript
+{
+  success: true,
+  scope: "level",
+  target: {
+    topic: "docker",
+    level: "beginner"
+  },
+
+  reset: {
+    courses: 3,
+    exercises: 5,
+    quizzes: 2
+  },
+
+  kept: {
+    points: false,      // Points were removed
+    pokemon: true,      // Pokemon kept
+    badges: false       // Badge removed
+  },
+
+  pointsRemoved: 175,
+  badgesRemoved: ["cascade-badge-docker"],
+
+  message: "Reset docker/beginner: 3 courses, 5 exercises. -175 points. Cascade Badge removed."
+}
+
+// Or if confirm not provided:
+{
+  success: false,
+  error: "confirmation_required",
+  preview: {
+    willReset: { courses: 3, exercises: 5, quizzes: 2 },
+    willRemove: { points: 175, badges: ["Cascade Badge"] },
+    willKeep: { pokemon: 5 }
+  },
+  message: "This will reset 3 courses and remove 175 points. Set confirm: true to proceed."
+}
+```
+
+**Examples**:
+
+```typescript
+// Reset everything (fresh start)
+resetProgress({
+  scope: "global",
+  options: { confirm: true }
+})
+
+// Reset just docker topic, keep Pokemon
+resetProgress({
+  scope: "topic",
+  topic: "docker",
+  options: { keepPokemon: true, confirm: true }
+})
+
+// Reset beginner level only
+resetProgress({
+  scope: "level",
+  topic: "docker",
+  level: "beginner",
+  options: { confirm: true }
+})
+
+// Reset single course and its exercises
+resetProgress({
+  scope: "course",
+  topic: "docker",
+  level: "beginner",
+  courseId: "01-first-container",
+  options: { confirm: true }
+})
+
+// Preview what would be reset (no confirm)
+resetProgress({
+  scope: "topic",
+  topic: "docker"
+})
+// Returns preview without executing
 ```
