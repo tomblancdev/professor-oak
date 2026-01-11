@@ -1,18 +1,31 @@
-# Professor Oak - Local Testing
-# Ignore all learning content and user data for local testing
+# Professor Oak - Package
+# Ignore user data and generated content
 
-# Topic folders (learning content)
-*/
+# User learning data (created when using the system)
+topics/
+trainer.yaml
+pokedex.yaml
 
-# But track the .gitignore itself
-!.gitignore
+# Quiz history
+quiz-history/
+!quiz-history/.gitkeep
 
-# Ignore any YAML configs that get created
-*.yaml
+# Node.js
+node_modules/
+mcp-server/node_modules/
+mcp-server/dist/
 
-# Ignore generated rewards/assets
+# Generated rewards/assets
 **/rewards/*.svg
 **/rewards/*.png
 
-# Ignore sandbox/work areas
+# Sandbox/work areas
 **/sandbox/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db

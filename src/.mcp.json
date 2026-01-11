@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "professor-oak": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "-v", "${workspaceFolder}:/data:rw",
+        "professor-oak-mcp:latest"
+      ]
+    }
+  }
+}
