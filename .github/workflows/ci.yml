@@ -22,7 +22,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           runCmd: |
-            cd /workspace/src/mcp-server
+            cd /workspace/mcp-server
             npm ci
             npm run build
             npm run test:run || true

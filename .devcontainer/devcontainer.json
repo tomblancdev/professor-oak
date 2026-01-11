@@ -3,7 +3,7 @@
   "dockerComposeFile": ["../src/mcp-server/docker-compose.yml"],
   "service": "dev",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "cd /workspace/src/mcp-server && npm install",
+  "postCreateCommand": "cd /workspace/mcp-server && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
