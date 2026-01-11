@@ -4,7 +4,7 @@
 # ============================================
 # Builder stage - compile TypeScript
 # ============================================
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 
 # Install bash for devcontainer compatibility (Alpine uses ash by default)
 RUN apk add --no-cache bash
@@ -27,7 +27,7 @@ RUN npm run build
 # ============================================
 # Runtime stage - production image
 # ============================================
-FROM node:20-alpine AS runtime
+FROM node:25-alpine AS runtime
 
 WORKDIR /app
 
