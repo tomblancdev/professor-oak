@@ -14,9 +14,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerTopicTools } from "./tools/topic.js";
 import { registerProgressTools } from "./tools/progress.js";
 import { registerTrainerTools } from "./tools/trainer.js";
+import { registerRewardsTools } from "./tools/rewards.js";
 // import { registerPokedexTools } from "./tools/pokedex.js";
 // import { registerQuizTools } from "./tools/quiz.js";
-// import { registerRewardsTools } from "./tools/rewards.js";
 // import { registerPersonaTools } from "./tools/persona.js";
 
 // Create server
@@ -29,9 +29,9 @@ const server = new McpServer({
 registerTopicTools(server);
 registerProgressTools(server);
 registerTrainerTools(server);
+registerRewardsTools(server);
 // registerPokedexTools(server);
 // registerQuizTools(server);
-// registerRewardsTools(server);
 // registerPersonaTools(server);
 
 // Start server
