@@ -1,9 +1,9 @@
 {
   "name": "Professor Oak Development",
-  "dockerComposeFile": ["../mcp/professor-oak-mcp/docker-compose.yml"],
+  "dockerComposeFile": ["../src/mcp-server/docker-compose.yml"],
   "service": "dev",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "cd /workspace/mcp/professor-oak-mcp && npm install",
+  "postCreateCommand": "cd /workspace/mcp-server && npm install",
   "customizations": {
     "vscode": {
       "extensions": [

@@ -8,11 +8,11 @@ services:
       context: .
       target: builder
     volumes:
-      - ../../:/workspace:cached
-      - node_modules:/workspace/mcp/professor-oak-mcp/node_modules
+      - ../:/workspace:cached
+      - node_modules:/workspace/mcp-server/node_modules
     stdin_open: true
     tty: true
-    working_dir: /workspace/mcp/professor-oak-mcp
+    working_dir: /workspace/mcp-server
     command: sleep infinity
 
   # MCP server runtime
@@ -21,7 +21,7 @@ services:
       context: .
       target: runtime
     volumes:
-      - ../../:/data:rw
+      - ../:/data:rw
     environment:
       - DATA_PATH=/data
     stdin_open: true

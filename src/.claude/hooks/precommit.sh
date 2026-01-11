@@ -4,8 +4,11 @@
 
 set -e
 
-PROJECT_ROOT="C:/Users/Tom/projects/professor-oak-hooks"
-MCP_PATH="$PROJECT_ROOT/mcp/professor-oak-mcp"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Navigate up to find the package root (src/.claude/hooks -> src)
+PACKAGE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+MCP_PATH="$PACKAGE_ROOT/mcp-server"
 
 echo "=========================================="
 echo "Professor Oak Pre-Commit Checks"

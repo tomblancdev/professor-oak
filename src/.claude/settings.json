@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'COMMAND=$(jq -r \".tool_input.command // \\\"\\\"\" 2>/dev/null); if echo \"$COMMAND\" | grep -qE \"^git commit\"; then bash \"C:/Users/Tom/projects/professor-oak-hooks/.claude/hooks/precommit.sh\"; else exit 0; fi'",
+            "command": "bash -c 'COMMAND=$(jq -r \".tool_input.command // \\\"\\\"\" 2>/dev/null); if echo \"$COMMAND\" | grep -qE \"^git commit\"; then bash \".claude/hooks/precommit.sh\"; else exit 0; fi'",
             "timeout": 300000
           }
         ]
