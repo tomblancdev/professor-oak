@@ -40,20 +40,20 @@ Professor Oak is a gamified learning system that transforms your educational jou
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/professor-oak.git
+git clone https://github.com/tomblancdev/professor-oak.git
 cd professor-oak
 ```
 
 ### 2. Build the MCP Server
 
 ```bash
-cd mcp/professor-oak-mcp
-docker build -t professor-oak-mcp:latest .
+cd src/mcp-server
+docker build -t professor-oak-mcp:latest --target runtime .
 ```
 
 ### 3. Configure Claude
 
-The `.mcp.json` file is already configured. For Claude Desktop, add to your config:
+The `.mcp.json` file is in the `src/` directory. Run Claude from there, or for Claude Desktop, add to your config:
 
 ```json
 {
@@ -74,7 +74,7 @@ The `.mcp.json` file is already configured. For Claude Desktop, add to your conf
 
 ```bash
 # Using Claude CLI
-cd professor-oak
+cd professor-oak/src
 claude
 
 # Then use the /learn command
@@ -152,18 +152,18 @@ claude
 
 ```
 professor-oak/
-├── CLAUDE.md              # Claude instructions
-├── trainer.yaml           # Your trainer profile
-├── pokedex.yaml           # Your Pokemon collection
-├── mcp/                   # MCP server
-│   └── professor-oak-mcp/
-├── personas/              # Character personas
-├── src/                   # Learning content (per topic)
-│   └── [topic]/
-│       ├── courses/
-│       ├── exercices/
-│       └── extras/
-└── docs/                  # Documentation
+├── CLAUDE.md              # Claude instructions (root)
+├── docs/                  # Documentation
+└── src/                   # Main source directory
+    ├── CLAUDE.md          # Persona system instructions
+    ├── .mcp.json          # MCP server configuration
+    ├── trainer.yaml       # Your trainer profile (auto-created)
+    ├── pokedex.yaml       # Your Pokemon collection (auto-created)
+    ├── mcp-server/        # MCP server source code
+    └── [topic]/           # Learning content (per topic)
+        ├── courses/
+        ├── exercices/
+        └── extras/
 ```
 
 ## Documentation

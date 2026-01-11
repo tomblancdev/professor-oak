@@ -23,15 +23,15 @@ This guide covers everything you need to get Professor Oak running on your syste
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/professor-oak.git
+git clone https://github.com/tomblancdev/professor-oak.git
 cd professor-oak
 ```
 
 ### Step 2: Build the MCP Server Docker Image
 
 ```bash
-cd mcp/professor-oak-mcp
-docker build -t professor-oak-mcp:latest .
+cd src/mcp-server
+docker build -t professor-oak-mcp:latest --target runtime .
 ```
 
 Verify the build:
@@ -48,12 +48,14 @@ professor-oak-mcp   latest    abc123def456   Just now   150MB
 
 #### Option A: Claude CLI
 
-The repository includes a pre-configured `.mcp.json` file. No additional configuration needed if you're using Claude CLI from the project directory.
+The repository includes a pre-configured `.mcp.json` file in the `src/` directory. Run Claude from the `src/` directory:
 
 ```bash
-cd /path/to/professor-oak
+cd /path/to/professor-oak/src
 claude
 ```
+
+> **Note**: The `.mcp.json` file uses `${workspaceFolder}` which is a VS Code variable. When using Claude CLI directly, you may need to copy the config and replace `${workspaceFolder}` with the absolute path to your project.
 
 #### Option B: Claude Desktop
 
@@ -130,7 +132,7 @@ This will:
 If not using devcontainers:
 
 ```bash
-cd mcp/professor-oak-mcp
+cd src/mcp-server
 
 # Install dependencies (using Docker)
 docker run --rm -v $(pwd):/app -w /app node:20-alpine npm ci
@@ -146,7 +148,7 @@ docker run --rm -v $(pwd):/app -w /app node:20-alpine npm run test:run
 
 ### .mcp.json
 
-MCP server configuration for Claude:
+MCP server configuration for Claude (located in `src/.mcp.json`):
 
 ```json
 {
@@ -162,6 +164,8 @@ MCP server configuration for Claude:
   }
 }
 ```
+
+> **Note**: `${workspaceFolder}` is a VS Code variable. For Claude CLI usage, replace it with the absolute path to the `src/` directory (e.g., `/home/user/professor-oak/src`).
 
 ### .claudeignore
 
@@ -179,7 +183,7 @@ quiz-history/
 
 ### trainer.yaml
 
-Initial trainer profile (auto-managed by MCP):
+Initial trainer profile (auto-created and managed by MCP on first use - you don't need to create this file manually):
 
 ```yaml
 version: 1
@@ -202,7 +206,7 @@ point_history: []
 
 ### pokedex.yaml
 
-Initial Pokedex (auto-managed by MCP):
+Initial Pokedex (auto-created and managed by MCP on first use - you don't need to create this file manually):
 
 ```yaml
 version: 1
@@ -308,7 +312,7 @@ Solutions:
 **TypeScript compilation errors**
 
 ```bash
-cd mcp/professor-oak-mcp
+cd src/mcp-server
 docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm ci && npx tsc --noEmit"
 ```
 
