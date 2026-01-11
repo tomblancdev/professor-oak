@@ -14,10 +14,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerTopicTools } from "./tools/topic.js";
 import { registerProgressTools } from "./tools/progress.js";
 import { registerTrainerTools } from "./tools/trainer.js";
+import { registerPokedexTools } from "./tools/pokedex.js";
+import { registerQuizTools } from "./tools/quiz.js";
 import { registerRewardsTools } from "./tools/rewards.js";
-// import { registerPokedexTools } from "./tools/pokedex.js";
-// import { registerQuizTools } from "./tools/quiz.js";
-// import { registerPersonaTools } from "./tools/persona.js";
+import { registerPersonaTools } from "./tools/persona.js";
 
 // Create server
 const server = new McpServer({
@@ -29,10 +29,10 @@ const server = new McpServer({
 registerTopicTools(server);
 registerProgressTools(server);
 registerTrainerTools(server);
+registerPokedexTools(server);
+registerQuizTools(server);
 registerRewardsTools(server);
-// registerPokedexTools(server);
-// registerQuizTools(server);
-// registerPersonaTools(server);
+registerPersonaTools(server);
 
 // Start server
 async function main() {
