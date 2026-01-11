@@ -22,7 +22,7 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           runCmd: |
-            cd /workspace/mcp/professor-oak-mcp
+            cd /workspace/src/mcp-server
             npm ci
             npm run build
             npm run test:run || true
@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: mcp/professor-oak-mcp/test-results/
+          path: src/mcp-server/test-results/
 
   lint:
     name: Lint Check
@@ -47,16 +47,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'mcp/professor-oak-mcp/package-lock.json'
+          cache-dependency-path: 'src/mcp-server/package-lock.json'
 
       - name: Install dependencies
         run: |
-          cd mcp/professor-oak-mcp
+          cd src/mcp-server
           npm ci
 
       - name: Check TypeScript
         run: |
-          cd mcp/professor-oak-mcp
+          cd src/mcp-server
           npx tsc --noEmit
 
   security-scan:
@@ -71,7 +71,7 @@ jobs:
 
       - name: Run npm audit
         run: |
-          cd mcp/professor-oak-mcp
+          cd src/mcp-server
           npm audit --audit-level=moderate || true
         continue-on-error: true
 
