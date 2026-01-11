@@ -9,7 +9,13 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import YAML from "yaml";
 
-const DATA_PATH = process.env.DATA_PATH || "/data";
+/**
+ * Get the data path from environment variable.
+ * Uses lazy evaluation to allow tests to set DATA_PATH before each test.
+ */
+function getDataPath(): string {
+  return process.env.DATA_PATH || "/data";
+}
 
 export interface YamlResult<T> {
   success: boolean;
@@ -22,7 +28,7 @@ export interface YamlResult<T> {
  */
 export async function readYaml<T>(relativePath: string): Promise<YamlResult<T>> {
   try {
-    const fullPath = path.join(DATA_PATH, relativePath);
+    const fullPath = path.join(getDataPath(), relativePath);
     const content = await fs.readFile(fullPath, "utf-8");
     const data = YAML.parse(content) as T;
     return { success: true, data };
@@ -43,7 +49,7 @@ export async function writeYaml<T>(
   header?: string
 ): Promise<YamlResult<void>> {
   try {
-    const fullPath = path.join(DATA_PATH, relativePath);
+    const fullPath = path.join(getDataPath(), relativePath);
 
     // Ensure directory exists
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
@@ -69,7 +75,7 @@ export async function writeYaml<T>(
  */
 export async function fileExists(relativePath: string): Promise<boolean> {
   try {
-    const fullPath = path.join(DATA_PATH, relativePath);
+    const fullPath = path.join(getDataPath(), relativePath);
     await fs.access(fullPath);
     return true;
   } catch {
@@ -82,7 +88,7 @@ export async function fileExists(relativePath: string): Promise<boolean> {
  */
 export async function createDirectory(relativePath: string): Promise<YamlResult<void>> {
   try {
-    const fullPath = path.join(DATA_PATH, relativePath);
+    const fullPath = path.join(getDataPath(), relativePath);
     await fs.mkdir(fullPath, { recursive: true });
     return { success: true };
   } catch (error) {

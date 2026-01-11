@@ -10,7 +10,7 @@ import * as path from "path";
 import YAML from "yaml";
 
 // Mock the DATA_PATH for tests
-const TEST_DATA_PATH = path.join(process.cwd(), "test-data");
+const TEST_DATA_PATH = path.join(process.cwd(), "test-data-trainer");
 
 // Set environment variable before importing modules
 process.env.DATA_PATH = TEST_DATA_PATH;

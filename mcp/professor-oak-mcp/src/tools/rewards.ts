@@ -16,14 +16,20 @@ import type { TopicProgress, LevelRoadmap } from "../types/progress.js";
 import type { TrainerData } from "../types/trainer.js";
 import { calculateRank } from "../services/points.js";
 
-const DATA_PATH = process.env.DATA_PATH || "/data";
+/**
+ * Get the data path from environment variable.
+ * Uses lazy evaluation to allow tests to set DATA_PATH before each test.
+ */
+function getDataPath(): string {
+  return process.env.DATA_PATH || "/data";
+}
 
 /**
  * Get all topic directories that have rewards.yaml
  */
 async function getTopicsWithRewards(): Promise<string[]> {
   const topics: string[] = [];
-  const srcPath = path.join(DATA_PATH, "src");
+  const srcPath = path.join(getDataPath(), "src");
 
   try {
     const entries = await fs.readdir(srcPath, { withFileTypes: true });

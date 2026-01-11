@@ -16,7 +16,13 @@ import {
 } from "../config/personas.js";
 import { isValidLevel, type Level } from "../config/constants.js";
 
-const DATA_PATH = process.env.DATA_PATH || "/data";
+/**
+ * Get the data path from environment variable.
+ * Uses lazy evaluation to allow tests to set DATA_PATH before each test.
+ */
+function getDataPath(): string {
+  return process.env.DATA_PATH || "/data";
+}
 
 /**
  * Build system prompt with context header
@@ -43,7 +49,7 @@ function buildSystemPrompt(
  */
 async function readPersonaFile(relativePath: string): Promise<string | null> {
   try {
-    const fullPath = path.join(DATA_PATH, "personas", relativePath);
+    const fullPath = path.join(getDataPath(), "personas", relativePath);
     const content = await fs.readFile(fullPath, "utf-8");
     return content;
   } catch {
