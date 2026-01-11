@@ -1,0 +1,31 @@
+# Professor Oak - User Data (Local Testing)
+# These files contain user progress and should not be committed
+
+# User data files
+trainer.yaml
+pokedex.yaml
+
+# Quiz history
+quiz-history/
+
+# Point history
+point-history/
+
+# Node modules (for MCP server)
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

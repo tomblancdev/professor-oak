@@ -1,0 +1,18 @@
+# Professor Oak - Local Testing
+# Ignore all learning content and user data for local testing
+
+# Topic folders (learning content)
+*/
+
+# But track the .gitignore itself
+!.gitignore
+
+# Ignore any YAML configs that get created
+*.yaml
+
+# Ignore generated rewards/assets
+**/rewards/*.svg
+**/rewards/*.png
+
+# Ignore sandbox/work areas
+**/sandbox/
