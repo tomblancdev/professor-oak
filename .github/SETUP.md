@@ -7,7 +7,7 @@ Follow these steps to activate the AI-enhanced CI/CD pipeline.
 ### ANTHROPIC_API_KEY (Required for AI Code Review)
 
 1. Get your API key from [Anthropic Console](https://console.anthropic.com/)
-2. Go to repository Settings → Secrets and variables → Actions
+2. Go to repository Settings -> Secrets and variables -> Actions
 3. Click "New repository secret"
 4. Name: `ANTHROPIC_API_KEY`
 5. Value: Your API key
@@ -27,23 +27,23 @@ This provides better integration and doesn't require managing API keys.
 
 ## 2. Enable GitHub Actions
 
-1. Go to Settings → Actions → General
+1. Go to Settings -> Actions -> General
 2. Under "Actions permissions", select "Allow all actions and reusable workflows"
 3. Click "Save"
 
 ## 3. Enable GitHub Container Registry (for releases)
 
-1. Go to Settings → Packages
+1. Go to Settings -> Packages
 2. Enable "Improved container support"
 
 ## 4. Configure Branch Protection (Recommended)
 
-1. Go to Settings → Branches
+1. Go to Settings -> Branches
 2. Click "Add rule" for `main` branch
 3. Enable:
-   - ✅ Require status checks to pass before merging
-   - ✅ Require pull request reviews before merging
-   - ✅ Require conversation resolution before merging
+   - Require status checks to pass before merging
+   - Require pull request reviews before merging
+   - Require conversation resolution before merging
 4. Select these status checks:
    - Build & Test (MCP Server)
    - Lint Check
@@ -85,7 +85,7 @@ Claude should respond with a code review.
 
 ## 6. Verify Dependabot
 
-1. Go to Insights → Dependency graph → Dependabot
+1. Go to Insights -> Dependency graph -> Dependabot
 2. You should see 3 ecosystems configured:
    - npm (for MCP server)
    - github-actions
@@ -107,6 +107,68 @@ This triggers:
 - Automated changelog generation
 - GitHub release creation
 - Docker image build and publish to GHCR
+
+## 8. Local Pre-Commit Hooks with Claude Code
+
+This project uses Claude Code hooks for local pre-commit checks. These run BEFORE commits, catching issues locally before they reach GitHub Actions.
+
+### How It Works
+
+When Claude Code runs a `git commit` command, the hook automatically:
+1. Builds the TypeScript project (`npm run build`)
+2. Runs type checking (`npx tsc --noEmit`)
+3. Runs all tests (`npm run test:run`)
+
+All checks run via Docker (per user preferences) using the `node:20-alpine` image.
+
+### Requirements
+
+- Docker must be running
+- No local Node.js installation needed
+
+### Configuration Files
+
+- `.claude/settings.json` - Hook configuration that intercepts `git commit`
+- `.claude/hooks/precommit.sh` - Script that runs the actual checks
+
+### Manual Testing
+
+Run the pre-commit script manually to verify it works:
+
+```bash
+bash .claude/hooks/precommit.sh
+```
+
+### Bypassing Hooks (Not Recommended)
+
+If you need to skip pre-commit checks in an emergency:
+
+```bash
+# Use git directly instead of through Claude Code
+git commit -m "your message"
+```
+
+**Note:** Claude Code hooks only run when Claude executes the command. Direct git usage bypasses them.
+
+### Timeout
+
+The hook has a 5-minute timeout (300000ms) to allow Docker pulls and full test runs.
+
+### Troubleshooting Pre-Commit Hooks
+
+**Docker Not Running**
+```
+ERROR: Docker is not running. Please start Docker and try again.
+```
+Solution: Start Docker Desktop
+
+**Build Fails**
+Check the error output. Common issues:
+- TypeScript compilation errors
+- Missing dependencies (run `npm ci` first if needed)
+
+**Tests Fail**
+Review test output to identify failing tests. Fix them before committing.
 
 ## Troubleshooting
 
@@ -150,7 +212,7 @@ This triggers:
 
 **Solutions:**
 1. Verify GITHUB_TOKEN permissions:
-   - Settings → Actions → General → Workflow permissions
+   - Settings -> Actions -> General -> Workflow permissions
    - Enable "Read and write permissions"
 2. Check image name matches repository
 3. Ensure tag follows semver format (v1.2.3)
@@ -169,6 +231,7 @@ This triggers:
 - [Workflow Files](.github/workflows/)
 - [MCP Best Practices](https://modelcontextprotocol.info/docs/best-practices/)
 - [Claude Code Docs](https://code.claude.com/docs/en/github-actions)
+- [Claude Code Hooks Guide](https://code.claude.com/docs/en/hooks-guide)
 
 ---
 
