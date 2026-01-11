@@ -1,5 +1,9 @@
 name: CodeQL Security Scan
 
+# NOTE: This workflow requires "Code scanning" to be enabled in repository settings.
+# Go to: Settings > Security > Code security and analysis > Code scanning
+# If not enabled, this workflow will fail with "Code scanning is not enabled" error.
+
 on:
   push:
     branches: [main, develop]
@@ -13,6 +17,8 @@ jobs:
   analyze:
     name: Analyze Code
     runs-on: ubuntu-latest
+    # Make CodeQL non-blocking - it's informational until code scanning is enabled
+    continue-on-error: true
     permissions:
       actions: read
       contents: read

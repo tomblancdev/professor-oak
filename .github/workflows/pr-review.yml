@@ -1,32 +1,49 @@
 name: AI-Powered PR Review
 
+# This workflow is DISABLED for automatic PR triggers.
+# The project uses local Claude hooks for code review instead of GitHub-based AI review.
+# To enable: uncomment the pull_request triggers and add ANTHROPIC_API_KEY secret.
+
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  pull_request_review_comment:
-    types: [created]
-  issue_comment:
-    types: [created]
+  # Disabled - user prefers local Claude hooks for reviews
+  # pull_request:
+  #   types: [opened, synchronize, reopened]
+  # pull_request_review_comment:
+  #   types: [created]
+  # issue_comment:
+  #   types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review (optional - for manual trigger)'
+        required: false
+        type: string
 
 jobs:
   ai-review:
     name: Claude Code Review
     runs-on: ubuntu-latest
-    # Won't block CI if API key not configured
-    continue-on-error: true
-    if: |
-      (github.event_name == 'pull_request') ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request &&
-       contains(github.event.comment.body, '@claude'))
+    # Only runs on manual dispatch
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
+      - name: Check API Key
+        env:
+          HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_API_KEY" != "true" ]; then
+            echo "::notice::ANTHROPIC_API_KEY not configured. Skipping Claude review."
+            echo "To enable Claude reviews, add ANTHROPIC_API_KEY to repository secrets."
+            exit 0
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Claude Code Review
+        if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
