@@ -4,7 +4,7 @@
       "command": "docker",
       "args": [
         "run", "--rm", "-i",
-        "-v", "${workspaceFolder}:/data:rw",
+        "-v", ".:/data:rw",
         "professor-oak-mcp:latest"
       ]
     }
