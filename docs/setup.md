@@ -36,12 +36,20 @@ docker build -t professor-oak-mcp:latest --target runtime .
 
 Verify the build:
 ```bash
+# Linux/macOS
 docker images | grep professor-oak-mcp
+
+# Windows (PowerShell)
+docker images | findstr professor-oak-mcp
+
+# Cross-platform alternative
+docker images professor-oak-mcp
 ```
 
 Expected output:
 ```
-professor-oak-mcp   latest    abc123def456   Just now   150MB
+REPOSITORY          TAG       IMAGE ID       CREATED        SIZE
+professor-oak-mcp   latest    abc123def456   Just now       150MB
 ```
 
 ### Step 3: Configure Claude
