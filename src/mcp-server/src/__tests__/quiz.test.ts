@@ -413,12 +413,13 @@ describe("Quiz Tools", () => {
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
       const sessionId = startResult.sessionId;
+      const session = quizSessions.get(sessionId)!;
       expect(quizSessions.has(sessionId)).toBe(true);
 
       // Submit result
       await submitQuizResultHandler({
         sessionId,
-        answers: { total: 4, correct: 3 },
+        answers: { total: session.parameters.questionCount, correct: session.parameters.passCount },
       });
 
       // Verify session removed
@@ -446,6 +447,68 @@ describe("Quiz Tools", () => {
       expect(result.points.breakdown?.base).toBeGreaterThan(0);
       expect(result.points.breakdown?.catchBonus).toBeGreaterThan(0);
       expect(result.points.breakdown?.perCorrect).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+
+  describe("Security: Answer Validation (Issue #60)", () => {
+    it("should reject when correct answers exceed total", async () => {
+      // Setup
+      await writeTestYaml("topics/docker/progress.yaml", createMockTopicProgress());
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+      await writeTestYaml("pokedex.yaml", createMockPokedexData());
+
+      // Start quiz
+      const startResult = await startQuizHandler({ topic: "docker" });
+
+      // Submit with correct > total
+      const result = await submitQuizResultHandler({
+        sessionId: startResult.sessionId,
+        answers: { total: 3, correct: 5 },
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("cannot exceed");
+    });
+
+    it("should reject when total does not match session question count", async () => {
+      // Setup
+      await writeTestYaml("topics/docker/progress.yaml", createMockTopicProgress());
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+      await writeTestYaml("pokedex.yaml", createMockPokedexData());
+
+      // Start quiz
+      const startResult = await startQuizHandler({ topic: "docker" });
+      const session = quizSessions.get(startResult.sessionId)!;
+      const expectedQuestions = session.parameters.questionCount;
+
+      // Submit with wrong total
+      const result = await submitQuizResultHandler({
+        sessionId: startResult.sessionId,
+        answers: { total: expectedQuestions + 5, correct: 2 },
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("expected");
+    });
+
+    it("should accept valid answers", async () => {
+      // Setup
+      await writeTestYaml("topics/docker/progress.yaml", createMockTopicProgress());
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+      await writeTestYaml("pokedex.yaml", createMockPokedexData());
+
+      // Start quiz
+      const startResult = await startQuizHandler({ topic: "docker" });
+      const session = quizSessions.get(startResult.sessionId)!;
+
+      // Submit with valid answers
+      const result = await submitQuizResultHandler({
+        sessionId: startResult.sessionId,
+        answers: { total: session.parameters.questionCount, correct: 2 },
+      });
+
+      expect(result.success).toBe(true);
     });
   });
 
