@@ -134,6 +134,21 @@ export async function addPoints(input: {
   topic: string;
   details?: Record<string, string>;
 }): Promise<any> {
+  // Security: Validate that points is a positive number (Issue #53)
+  if (typeof input.points !== "number" || !Number.isFinite(input.points)) {
+    return {
+      success: false,
+      error: "Points must be a valid number",
+    };
+  }
+
+  if (input.points <= 0) {
+    return {
+      success: false,
+      error: "Points must be a positive number (greater than 0)",
+    };
+  }
+
   const result = await readYaml<TrainerData>("trainer.yaml");
 
   if (!result.success) {
@@ -327,7 +342,7 @@ export function registerTrainerTools(server: McpServer) {
      Updates total_points, adds to point_history with timestamp.
      Checks for rank promotion and returns new rank if promoted.`,
     {
-      points: z.number().describe("Points to add"),
+      points: z.number().positive().describe("Points to add (must be positive)"),
       action: z
         .string()
         .describe(

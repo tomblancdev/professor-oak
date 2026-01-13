@@ -9,7 +9,7 @@ import { z } from "zod";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { readYaml, writeYaml, fileExists, createDirectory } from "../services/yaml.js";
-import { LEVELS, isValidKebabCase } from "../config/constants.js";
+import { LEVELS, isValidKebabCase, isValidTopicPath } from "../config/constants.js";
 import { getTopicPath, getProgressPath, getRewardsPath, TOPICS_BASE_PATH } from "../services/paths.js";
 import type { TopicProgress, LevelRoadmap } from "../types/progress.js";
 
@@ -119,6 +119,14 @@ export function registerTopicTools(server: McpServer) {
       topic: z.string().describe("Topic name (e.g., 'docker') or path (e.g., 'aws/ec2')"),
     },
     async ({ topic }) => {
+      // Security: Validate topic path to prevent path traversal attacks
+      if (!isValidTopicPath(topic)) {
+        return jsonResponse({
+          success: false,
+          error: "Invalid topic path: must not contain traversal characters.",
+        });
+      }
+
       const topicPath = topic.includes("/")
         ? `topics/${topic.split("/")[0]}/subtopics/${topic.split("/")[1]}`
         : `topics/${topic}`;
@@ -248,6 +256,14 @@ export function registerTopicTools(server: McpServer) {
       level: z.enum(["starter", "beginner", "advanced", "expert"]).describe("Starting level"),
     },
     async ({ topic, level }) => {
+      // Security: Validate topic path to prevent path traversal attacks
+      if (!isValidTopicPath(topic)) {
+        return jsonResponse({
+          success: false,
+          error: `Invalid topic path: "${topic}". Path must not contain traversal characters (../, \) and must be valid kebab-case.`,
+        });
+      }
+
       const topicPath = `topics/${topic}`;
       const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 
@@ -311,6 +327,14 @@ export function registerTopicTools(server: McpServer) {
       }),
     },
     async ({ topic, level, roadmap }) => {
+      // Security: Validate topic path to prevent path traversal attacks
+      if (!isValidTopicPath(topic)) {
+        return jsonResponse({
+          success: false,
+          error: `Invalid topic path: "${topic}". Path must not contain traversal characters (../, \) and must be valid kebab-case.`,
+        });
+      }
+
       const topicPath = `topics/${topic}`;
       const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 

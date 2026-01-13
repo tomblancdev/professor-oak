@@ -74,3 +74,62 @@ export function isValidKebabCase(str: string): boolean {
 export function isValidLevel(level: string): level is Level {
   return LEVELS.includes(level as Level);
 }
+
+/**
+ * Validate topic path for security - prevents path traversal attacks.
+ * Rejects paths containing:
+ * - Parent directory references (..)
+ * - Backslashes (\)
+ * - Null bytes
+ * - Multiple consecutive slashes
+ *
+ * For subtopics (e.g., "aws/ec2"), validates each segment individually.
+ */
+export function isValidTopicPath(topic: string): boolean {
+  // Reject empty strings
+  if (!topic || topic.trim() === "") {
+    return false;
+  }
+
+  // Reject null bytes
+  if (topic.includes("\0")) {
+    return false;
+  }
+
+  // Reject backslashes (Windows path separator that could bypass checks)
+  if (topic.includes("\\")) {
+    return false;
+  }
+
+  // Reject parent directory references
+  if (topic.includes("..")) {
+    return false;
+  }
+
+  // Reject multiple consecutive slashes
+  if (topic.includes("//")) {
+    return false;
+  }
+
+  // Reject leading or trailing slashes
+  if (topic.startsWith("/") || topic.endsWith("/")) {
+    return false;
+  }
+
+  // For subtopics (e.g., "aws/ec2"), validate each segment
+  const segments = topic.split("/");
+
+  // Only allow 1 or 2 segments (topic or topic/subtopic)
+  if (segments.length > 2) {
+    return false;
+  }
+
+  // Each segment must be valid kebab-case
+  for (const segment of segments) {
+    if (!isValidKebabCase(segment)) {
+      return false;
+    }
+  }
+
+  return true;
+}

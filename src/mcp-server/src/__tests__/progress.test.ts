@@ -731,4 +731,110 @@ describe("Progress Tools", () => {
       expect(result.topic).toBe("ec2");
     });
   });
+  describe("Security: Locked Level Bypass (Issue #73)", () => {
+    it("should reject completing items in locked levels", async () => {
+      // Setup - beginner level is locked (no status or pending)
+      const progress = createMockTopicProgress();
+      progress.roadmap.advanced = {
+        status: "locked",
+        courses: [
+          { id: "01-advanced-course", name: "Advanced Course", mandatory: true, completed: false },
+        ],
+        exercices: {},
+      };
+      await writeTestYaml("topics/docker/progress.yaml", progress);
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+
+      // Execute - try to complete item in locked level
+      const result = await completeItemHandler({
+        topic: "docker",
+        level: "advanced",
+        type: "course",
+        itemId: "01-advanced-course",
+      });
+
+      // Verify - should be rejected
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("must be");
+      expect(result.error).toContain("locked");
+    });
+
+    it("should reject completing items in pending levels", async () => {
+      // Setup - level is pending (not active)
+      const progress = createMockTopicProgress();
+      progress.roadmap.advanced = {
+        status: "pending",
+        courses: [
+          { id: "01-advanced-course", name: "Advanced Course", mandatory: true, completed: false },
+        ],
+        exercices: {},
+      };
+      await writeTestYaml("topics/docker/progress.yaml", progress);
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+
+      // Execute - try to complete item in pending level
+      const result = await completeItemHandler({
+        topic: "docker",
+        level: "advanced",
+        type: "course",
+        itemId: "01-advanced-course",
+      });
+
+      // Verify - should be rejected
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("must be");
+      expect(result.error).toContain("pending");
+    });
+
+    it("should allow completing items in active levels", async () => {
+      // Setup - level is active
+      await writeTestYaml("topics/docker/progress.yaml", createMockTopicProgress());
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+
+      // Execute - complete item in active level (beginner is active in mock)
+      const result = await completeItemHandler({
+        topic: "docker",
+        level: "beginner",
+        type: "course",
+        itemId: "02-images-basics",
+      });
+
+      // Verify - should succeed
+      expect(result.success).toBe(true);
+      expect(result.pointsAwarded).toBe(25);
+    });
+  });
+
+  describe("Security: Path Traversal Validation (Issue #69)", () => {
+    it("should reject path traversal in getProgress", async () => {
+      const result = await getProgressHandler({ topic: "../etc/passwd" });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid topic path");
+    });
+
+    it("should reject path traversal in completeItem", async () => {
+      await writeTestYaml("trainer.yaml", createMockTrainerData());
+      
+      const result = await completeItemHandler({
+        topic: "../secrets",
+        level: "beginner",
+        type: "course",
+        itemId: "01-test",
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid topic path");
+    });
+
+    it("should reject path traversal in getNextAction", async () => {
+      const result = await getNextActionHandler({ topic: "docker/../../../etc" });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid topic path");
+    });
+
+    it("should reject backslash paths", async () => {
+      const result = await getProgressHandler({ topic: "docker\..\secrets" });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid topic path");
+    });
+  });
 });

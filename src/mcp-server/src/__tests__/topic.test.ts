@@ -14,7 +14,7 @@ process.env.DATA_PATH = TEST_DATA_PATH;
 
 // Import after setting env
 import { readYaml, writeYaml, fileExists, createDirectory } from "../services/yaml.js";
-import { isValidKebabCase, LEVELS } from "../config/constants.js";
+import { isValidKebabCase, isValidTopicPath, LEVELS } from "../config/constants.js";
 import type { TopicProgress } from "../types/progress.js";
 
 // Helper to clean up test directory
@@ -149,7 +149,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should detect existing topic", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       await createDirectory(topicPath);
 
       const exists = await fileExists(topicPath);
@@ -207,7 +207,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should calculate completion stats", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       await createDirectory(topicPath);
 
       const progress: TopicProgress = {
@@ -269,7 +269,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should handle non-existent topic", async () => {
-      const result = await readYaml<TopicProgress>("topics/nonexistent/progress.yaml");
+      const result = await readYaml<TopicProgress>("src/nonexistent/progress.yaml");
       expect(result.success).toBe(false);
     });
   });
@@ -277,8 +277,8 @@ describe("Topic Management Tools", () => {
   describe("listTopics", () => {
     it("should list all topics in src folder", async () => {
       // Create multiple topics
-      await createDirectory("topics/docker");
-      await createDirectory("topics/python");
+      await createDirectory("src/docker");
+      await createDirectory("src/python");
 
       const dockerProgress: TopicProgress = {
         version: 1,
@@ -304,11 +304,11 @@ describe("Topic Management Tools", () => {
         extras: [],
       };
 
-      await writeYaml("topics/docker/progress.yaml", dockerProgress);
-      await writeYaml("topics/python/progress.yaml", pythonProgress);
+      await writeYaml("src/docker/progress.yaml", dockerProgress);
+      await writeYaml("src/python/progress.yaml", pythonProgress);
 
       // Read directories
-      const srcPath = path.join(TEST_DATA_PATH, "topics");
+      const srcPath = path.join(TEST_DATA_PATH, "src");
       const entries = await fs.readdir(srcPath, { withFileTypes: true });
       const topics = entries.filter(e => e.isDirectory()).map(e => e.name);
 
@@ -318,7 +318,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should include progress stats when requested", async () => {
-      await createDirectory("topics/docker");
+      await createDirectory("src/docker");
 
       const progress: TopicProgress = {
         version: 1,
@@ -343,9 +343,9 @@ describe("Topic Management Tools", () => {
         extras: [],
       };
 
-      await writeYaml("topics/docker/progress.yaml", progress);
+      await writeYaml("src/docker/progress.yaml", progress);
 
-      const result = await readYaml<TopicProgress>("topics/docker/progress.yaml");
+      const result = await readYaml<TopicProgress>("src/docker/progress.yaml");
       const courses = result.data!.roadmap.starter?.courses || [];
       const completed = courses.filter(c => c.completed).length;
       const completion = Math.round((completed / courses.length) * 100);
@@ -356,7 +356,7 @@ describe("Topic Management Tools", () => {
 
   describe("initializeLevel", () => {
     it("should set starting level in progress.yaml", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       await createDirectory(topicPath);
 
       const progress: TopicProgress = {
@@ -392,7 +392,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should reject if level already set", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       await createDirectory(topicPath);
 
       const progress: TopicProgress = {
@@ -431,7 +431,7 @@ describe("Topic Management Tools", () => {
 
   describe("setRoadmap", () => {
     it("should save roadmap to progress.yaml", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       await createDirectory(`${topicPath}/courses/starter`);
       await createDirectory(`${topicPath}/exercices/starter`);
 
@@ -479,7 +479,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should create course placeholder files", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       const level = "starter";
       await createDirectory(`${topicPath}/courses/${level}`);
 
@@ -512,7 +512,7 @@ describe("Topic Management Tools", () => {
     });
 
     it("should create exercise folders with structure", async () => {
-      const topicPath = "topics/docker";
+      const topicPath = "src/docker";
       const level = "starter";
       const courseId = "01-intro";
 
@@ -557,6 +557,67 @@ describe("Topic Management Tools", () => {
       expect(numbered[0].id).toBe("01-what-is-docker");
       expect(numbered[1].id).toBe("02-installation");
       expect(numbered[2].id).toBe("03-first-container");
+    });
+  });
+  describe("Security: Path Traversal Validation (Issue #69)", () => {
+    describe("isValidTopicPath", () => {
+      it("should accept valid topic names", () => {
+        expect(isValidTopicPath("docker")).toBe(true);
+        expect(isValidTopicPath("python-async")).toBe(true);
+        expect(isValidTopicPath("docker-basics-101")).toBe(true);
+      });
+
+      it("should accept valid subtopic paths", () => {
+        expect(isValidTopicPath("aws/ec2")).toBe(true);
+        expect(isValidTopicPath("cloud/kubernetes")).toBe(true);
+      });
+
+      it("should reject path traversal attempts with ..", () => {
+        expect(isValidTopicPath("../etc/passwd")).toBe(false);
+        expect(isValidTopicPath("docker/../..")).toBe(false);
+        expect(isValidTopicPath("..")).toBe(false);
+        expect(isValidTopicPath("docker/..")).toBe(false);
+        expect(isValidTopicPath("../docker")).toBe(false);
+      });
+
+      it("should reject backslash path separators", () => {
+        expect(isValidTopicPath(String.raw`docker\secrets`)).toBe(false);
+        expect(isValidTopicPath(String.raw`..\etc\passwd`)).toBe(false);
+        expect(isValidTopicPath(String.raw`topic\subtopic`)).toBe(false);
+      });
+
+      it("should reject null bytes", () => {
+        expect(isValidTopicPath("docker ")).toBe(false);
+        expect(isValidTopicPath("topic /subtopic")).toBe(false);
+      });
+
+      it("should reject empty strings", () => {
+        expect(isValidTopicPath("")).toBe(false);
+        expect(isValidTopicPath("  ")).toBe(false);
+      });
+
+      it("should reject leading/trailing slashes", () => {
+        expect(isValidTopicPath("/docker")).toBe(false);
+        expect(isValidTopicPath("docker/")).toBe(false);
+        expect(isValidTopicPath("/docker/")).toBe(false);
+      });
+
+      it("should reject multiple consecutive slashes", () => {
+        expect(isValidTopicPath("aws//ec2")).toBe(false);
+        expect(isValidTopicPath("docker///")).toBe(false);
+      });
+
+      it("should reject paths with more than 2 segments", () => {
+        expect(isValidTopicPath("aws/ec2/instances")).toBe(false);
+        expect(isValidTopicPath("a/b/c/d")).toBe(false);
+      });
+
+      it("should reject invalid kebab-case segments", () => {
+        expect(isValidTopicPath("Docker")).toBe(false);
+        expect(isValidTopicPath("aws/EC2")).toBe(false);
+        expect(isValidTopicPath("docker_basics")).toBe(false);
+        expect(isValidTopicPath("docker basics")).toBe(false);
+      });
     });
   });
 });

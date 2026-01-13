@@ -531,4 +531,84 @@ describe("Trainer Tools", () => {
       expect(result.entries).toHaveLength(20);
     });
   });
+  describe("Security: Negative Points Validation (Issue #53)", () => {
+    it("should reject negative points", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      const result = await addPoints({
+        points: -100,
+        action: "malicious_action",
+        topic: "docker",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("positive");
+    });
+
+    it("should reject zero points", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      const result = await addPoints({
+        points: 0,
+        action: "no_points",
+        topic: "docker",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("positive");
+    });
+
+    it("should not modify points when validation fails", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      await addPoints({
+        points: -100,
+        action: "malicious_action",
+        topic: "docker",
+      });
+
+      // Verify points were not changed
+      const trainerData = await readTrainerFile();
+      expect(trainerData.total_points).toBe(500);
+    });
+
+    it("should reject NaN as points", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      const result = await addPoints({
+        points: NaN,
+        action: "invalid",
+        topic: "docker",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("valid number");
+    });
+
+    it("should reject Infinity as points", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      const result = await addPoints({
+        points: Infinity,
+        action: "invalid",
+        topic: "docker",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("valid number");
+    });
+
+    it("should accept valid positive points", async () => {
+      await createTrainerFile({ total_points: 500 });
+
+      const result = await addPoints({
+        points: 100,
+        action: "course_complete",
+        topic: "docker",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.newTotal).toBe(600);
+    });
+  });
 });

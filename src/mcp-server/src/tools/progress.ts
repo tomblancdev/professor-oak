@@ -9,7 +9,7 @@ import { z } from "zod";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { readYaml, writeYaml } from "../services/yaml.js";
-import { LEVELS, POINTS } from "../config/constants.js";
+import { LEVELS, POINTS, isValidTopicPath } from "../config/constants.js";
 import { calculateRank } from "../services/points.js";
 import { getTopicPath, getProgressPath, TOPICS_BASE_PATH } from "../services/paths.js";
 import type { TopicProgress, LevelRoadmap } from "../types/progress.js";
@@ -121,6 +121,14 @@ export async function getProgressHandler(args: {
     return await getOverallProgressHandler({});
   }
 
+  // Security: Validate topic path to prevent path traversal attacks
+  if (!isValidTopicPath(topic)) {
+    return {
+      success: false,
+      error: `Invalid topic path: "${topic}". Path must not contain traversal characters (../, \) and must be valid kebab-case.`,
+    };
+  }
+
   // Determine topic path (handle subtopics like aws/ec2)
   const topicPath = topic.includes("/")
     ? `topics/${topic.split("/")[0]}/subtopics/${topic.split("/")[1]}`
@@ -213,6 +221,14 @@ export async function completeItemHandler(args: {
 }): Promise<CompleteItemResponse> {
   const { topic, level, type, itemId, courseId } = args;
 
+  // Security: Validate topic path to prevent path traversal attacks
+  if (!isValidTopicPath(topic)) {
+    return {
+      success: false,
+      error: `Invalid topic path: "${topic}". Path must not contain traversal characters.`,
+    };
+  }
+
   const topicPath = `topics/${topic}`;
   const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
 
@@ -225,6 +241,14 @@ export async function completeItemHandler(args: {
 
   if (!levelData) {
     return { success: false, error: `Level "${level}" not found in roadmap` };
+  }
+
+  // Security: Check if level is active before allowing completion (Issue #73)
+  if (levelData.status !== "active") {
+    return {
+      success: false,
+      error: `Cannot complete items in level "${level}" - level status is "${levelData.status}" (must be "active")`,
+    };
   }
 
   let pointsAwarded = 0;
@@ -329,6 +353,14 @@ export async function getNextActionHandler(args: {
   topic: string;
 }): Promise<NextActionResponse> {
   const { topic } = args;
+
+  // Security: Validate topic path to prevent path traversal attacks
+  if (!isValidTopicPath(topic)) {
+    return {
+      success: false,
+      error: `Invalid topic path: "${topic}". Path must not contain traversal characters.`,
+    };
+  }
 
   const topicPath = `topics/${topic}`;
   const result = await readYaml<TopicProgress>(`${topicPath}/progress.yaml`);
