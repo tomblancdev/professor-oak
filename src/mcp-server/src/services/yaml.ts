@@ -98,3 +98,57 @@ export async function createDirectory(relativePath: string): Promise<YamlResult<
     };
   }
 }
+
+// Import lock functions for atomic operations
+import { withFileLock, withMultiFileLock } from "./lock.js";
+
+// Re-export lock functions for convenience
+export { withFileLock, withMultiFileLock };
+
+/**
+ * Atomically read, modify, and write a YAML file with locking.
+ * This is the recommended way to update YAML files to prevent race conditions.
+ *
+ * @param relativePath - The file path to modify
+ * @param modifier - Function that receives current data and returns modified data
+ * @param options - Optional settings (defaultData, header)
+ * @returns The result with the modified data
+ */
+export async function modifyYaml<T>(
+  relativePath: string,
+  modifier: (data: T) => T | Promise<T>,
+  options?: {
+    defaultData?: T;
+    header?: string;
+  }
+): Promise<YamlResult<T>> {
+  return withFileLock(relativePath, async () => {
+    // Read current data
+    const result = await readYaml<T>(relativePath);
+    let data: T;
+
+    if (!result.success) {
+      if (options?.defaultData !== undefined) {
+        data = options.defaultData;
+      } else {
+        return result;
+      }
+    } else {
+      data = result.data!;
+    }
+
+    // Apply modification
+    data = await modifier(data);
+
+    // Write updated data
+    const writeResult = await writeYaml(relativePath, data, options?.header);
+    if (!writeResult.success) {
+      return {
+        success: false,
+        error: writeResult.error
+      };
+    }
+
+    return { success: true, data };
+  });
+}
