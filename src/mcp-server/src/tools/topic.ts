@@ -283,6 +283,20 @@ export function registerTopicTools(server: McpServer) {
         });
       }
 
+      // Verify folder structure exists before proceeding
+      const levelCoursePath = path.join(getDataPath(), `topics/${topic}/courses/${level}`);
+      const levelExercisePath = path.join(getDataPath(), `topics/${topic}/exercices/${level}`);
+
+      try {
+        await fs.access(levelCoursePath);
+        await fs.access(levelExercisePath);
+      } catch {
+        return jsonResponse({
+          success: false,
+          error: `Topic folder structure incomplete for level "${level}". Run createTopic first.`,
+        });
+      }
+
       // Update progress.yaml
       data.current_level = level;
       data.roadmap[level] = {
