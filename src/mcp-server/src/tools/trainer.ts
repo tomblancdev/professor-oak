@@ -12,11 +12,78 @@ import { calculateRank, pointsToNextRank } from "../services/points.js";
 import type { TrainerData, PointHistoryEntry } from "../types/trainer.js";
 
 /**
+ * Response types for trainer handlers
+ */
+interface GetTrainerResponse {
+  success: boolean;
+  error?: string;
+  name?: string | null;
+  rank?: string;
+  totalPoints?: number;
+  startedAt?: string | null;
+  settings?: {
+    wild_encounters: boolean;
+    notifications: boolean;
+  };
+  achievements?: {
+    first_pokemon: string | null;
+    first_badge: string | null;
+    first_legendary: string | null;
+  };
+  point_history?: PointHistoryEntry[];
+}
+
+interface UpdateTrainerResponse {
+  success: boolean;
+  error?: string;
+  updated?: string[];
+  trainer?: {
+    name: string | null;
+    startedAt: string | null;
+    settings: {
+      wild_encounters: boolean;
+      notifications: boolean;
+    };
+  };
+}
+
+interface AddPointsResponse {
+  success: boolean;
+  error?: string;
+  pointsAdded?: number;
+  newTotal?: number;
+  rankChange?: {
+    previous: string;
+    new: string;
+  };
+}
+
+interface GetRankResponse {
+  success: boolean;
+  error?: string;
+  currentRank?: string;
+  totalPoints?: number;
+  nextRank?: {
+    name: string;
+    pointsNeeded: number;
+  } | null;
+}
+
+interface GetPointHistoryResponse {
+  success: boolean;
+  error?: string;
+  entries?: PointHistoryEntry[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
+
+/**
  * Get trainer profile and stats
  */
 export async function getTrainer(input: {
   includeHistory?: boolean;
-}): Promise<any> {
+}): Promise<GetTrainerResponse> {
   // Initialize trainer.yaml if it doesn't exist
   const exists = await fileExists("trainer.yaml");
   if (!exists) {
@@ -51,7 +118,7 @@ export async function getTrainer(input: {
 
   const data = result.data!;
 
-  const response: any = {
+  const response: GetTrainerResponse = {
     success: true,
     name: data.trainer,
     rank: data.rank,
@@ -77,7 +144,7 @@ export async function updateTrainer(input: {
     wild_encounters?: boolean;
     notifications?: boolean;
   };
-}): Promise<any> {
+}): Promise<UpdateTrainerResponse> {
   const result = await readYaml<TrainerData>("trainer.yaml");
 
   if (!result.success) {
@@ -133,7 +200,7 @@ export async function addPoints(input: {
   action: string;
   topic: string;
   details?: Record<string, string>;
-}): Promise<any> {
+}): Promise<AddPointsResponse> {
   // Security: Validate that points is a positive number (Issue #53)
   if (typeof input.points !== "number" || !Number.isFinite(input.points)) {
     return {
@@ -194,7 +261,7 @@ export async function addPoints(input: {
   // Save changes
   await writeYaml("trainer.yaml", data, "Professor Oak - Trainer Profile");
 
-  const response: any = {
+  const response: AddPointsResponse = {
     success: true,
     pointsAdded: input.points,
     newTotal: data.total_points,
@@ -210,7 +277,7 @@ export async function addPoints(input: {
 /**
  * Get current rank and progress to next
  */
-export async function getRank(input: {}): Promise<any> {
+export async function getRank(input: {}): Promise<GetRankResponse> {
   const result = await readYaml<TrainerData>("trainer.yaml");
 
   if (!result.success) {
@@ -244,7 +311,7 @@ export async function getPointHistory(input: {
   topic?: string;
   limit?: number;
   offset?: number;
-}): Promise<any> {
+}): Promise<GetPointHistoryResponse> {
   const result = await readYaml<TrainerData>("trainer.yaml");
 
   if (!result.success) {
@@ -279,7 +346,7 @@ export async function getPointHistory(input: {
 /**
  * JSON response helper for MCP tools
  */
-function jsonResponse(data: any) {
+function jsonResponse(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data) }],
   };

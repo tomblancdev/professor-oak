@@ -11,11 +11,100 @@ import * as path from "path";
 import { readYaml, writeYaml } from "../services/yaml.js";
 import { POINTS, GYM_LEADERS, isValidLevel, LEVELS } from "../config/constants.js";
 import type { Level } from "../config/constants.js";
+import type { Milestone } from "../types/rewards.js";
 import type { TopicRewards, Badge } from "../types/rewards.js";
 import type { TopicProgress, LevelRoadmap } from "../types/progress.js";
 import type { TrainerData } from "../types/trainer.js";
 import { calculateRank } from "../services/points.js";
 import { TOPICS_BASE_PATH } from "../services/paths.js";
+
+/**
+ * Response types for rewards handlers
+ */
+interface AwardBadgeResponse {
+  success: boolean;
+  error?: string;
+  badge?: Badge;
+  firstBadge?: boolean;
+  pointsAwarded?: number;
+  rankChange?: {
+    previous: string;
+    new: string;
+  };
+  missing?: string[];
+}
+
+interface GetBadgesResponse {
+  success: boolean;
+  error?: string;
+  badges?: Badge[];
+  total?: number;
+  byTopic?: Record<string, number>;
+}
+
+interface LevelProgressStatus {
+  completed: boolean;
+  total: number;
+  done: number;
+}
+
+interface LevelStatusItem {
+  level: Level;
+  status: string;
+  progress?: {
+    courses: LevelProgressStatus;
+    exercises: LevelProgressStatus;
+    quiz: { required: boolean; passed: boolean };
+  };
+  badge?: {
+    eligible: boolean;
+    earned: {
+      id: string;
+      name: string;
+      earned_at: string;
+      points: number;
+    } | null;
+    template: {
+      name: string;
+      gym_leader: string;
+      points: number;
+    };
+  };
+}
+
+interface GetRewardsResponse {
+  success: boolean;
+  error?: string;
+  topic?: string;
+  levels?: LevelStatusItem[];
+  badges?: {
+    total_earned: number;
+    earned: Badge[];
+  };
+  milestones?: {
+    total: number;
+    milestones: Milestone[];
+  };
+}
+
+interface CheckBadgeEligibilityResponse {
+  success: boolean;
+  error?: string;
+  eligible?: boolean;
+  alreadyEarned?: boolean;
+  reason?: string;
+  requirements?: {
+    courses: { completed: boolean; total: number; done: number };
+    exercises: { completed: boolean; total: number; done: number };
+    quiz: { required: boolean; passed: boolean };
+  };
+  missing?: string[];
+  badgeInfo?: {
+    name: string;
+    gym_leader: string;
+    points: number;
+  };
+}
 
 /**
  * Get the data path from environment variable.
@@ -115,7 +204,7 @@ export async function awardBadge(input: {
   topic: string;
   level: string;
   badgeId?: string;
-}): Promise<any> {
+}): Promise<AwardBadgeResponse> {
   // Validate level
   if (!isValidLevel(input.level)) {
     return {
@@ -293,7 +382,7 @@ export async function awardBadge(input: {
 /**
  * Get earned badges
  */
-export async function getBadges(input: { topic?: string }): Promise<any> {
+export async function getBadges(input: { topic?: string }): Promise<GetBadgesResponse> {
   const allBadges: (Badge & { topic: string })[] = [];
 
   if (input.topic) {
@@ -343,7 +432,7 @@ export async function getBadges(input: { topic?: string }): Promise<any> {
  */
 export async function getRewards(input: {
   topic: string;
-}): Promise<any> {
+}): Promise<GetRewardsResponse> {
   // Read progress.yaml
   const progressResult = await readYaml<TopicProgress>(
     `topics/${input.topic}/progress.yaml`
@@ -450,7 +539,7 @@ export async function getRewards(input: {
 export async function checkBadgeEligibility(input: {
   topic: string;
   level: string;
-}): Promise<any> {
+}): Promise<CheckBadgeEligibilityResponse> {
   // Validate level
   if (!isValidLevel(input.level)) {
     return {
@@ -558,7 +647,7 @@ export async function checkBadgeEligibility(input: {
 /**
  * JSON response helper for MCP tools
  */
-function jsonResponse(data: any) {
+function jsonResponse(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data) }],
   };

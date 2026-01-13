@@ -8,7 +8,38 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { readYaml, writeYaml, fileExists } from "../services/yaml.js";
 import { POINTS } from "../config/constants.js";
-import type { PokedexData, PokemonEntry } from "../types/pokedex.js";
+import type { PokedexData, PokemonEntry, PokedexStats } from "../types/pokedex.js";
+
+/**
+ * Response types for pokedex handlers
+ */
+interface GetPokedexResponse {
+  success: boolean;
+  error?: string;
+  pokemon?: PokemonEntry[];
+  stats?: PokedexStats;
+  filtersApplied?: Record<string, string>;
+}
+
+interface AddPokemonResponse {
+  success: boolean;
+  error?: string;
+  pokemon?: PokemonEntry;
+  firstPokemon?: boolean;
+}
+
+interface EvolvePokemonResponse {
+  success: boolean;
+  error?: string;
+  evolvedPokemon?: PokemonEntry;
+  pointsAwarded?: number;
+}
+
+interface GetPokedexStatsResponse {
+  success: boolean;
+  error?: string;
+  stats?: PokedexStats & { by_tier: Record<number, number> };
+}
 
 /**
  * Get Pokemon collection with optional filtering
@@ -16,7 +47,7 @@ import type { PokedexData, PokemonEntry } from "../types/pokedex.js";
 export async function getPokedex(input: {
   topic?: string;
   level?: string;
-}): Promise<any> {
+}): Promise<GetPokedexResponse> {
   // Initialize pokedex.yaml if it doesn't exist
   const exists = await fileExists("pokedex.yaml");
   if (!exists) {
@@ -60,7 +91,7 @@ export async function getPokedex(input: {
     filtersApplied.level = input.level;
   }
 
-  const response: any = {
+  const response: GetPokedexResponse = {
     success: true,
     pokemon,
     stats: data.stats,
@@ -88,7 +119,7 @@ export async function addPokemon(input: {
   quizScore?: string;
   pointsEarned?: number;
   gymLeader?: string;
-}): Promise<any> {
+}): Promise<AddPokemonResponse> {
   const result = await readYaml<PokedexData>("pokedex.yaml");
 
   if (!result.success) {
@@ -165,7 +196,7 @@ export async function evolvePokemon(input: {
   evolvedPokedexNumber: number;
   evolvedName: string;
   evolvedSprites: { front: string; back?: string; shiny?: string };
-}): Promise<any> {
+}): Promise<EvolvePokemonResponse> {
   const result = await readYaml<PokedexData>("pokedex.yaml");
 
   if (!result.success) {
@@ -252,7 +283,7 @@ export async function evolvePokemon(input: {
 /**
  * Get Pokedex statistics
  */
-export async function getPokedexStats(input: {}): Promise<any> {
+export async function getPokedexStats(input: {}): Promise<GetPokedexStatsResponse> {
   const result = await readYaml<PokedexData>("pokedex.yaml");
 
   if (!result.success) {
@@ -288,7 +319,7 @@ export async function getPokedexStats(input: {}): Promise<any> {
 /**
  * JSON response helper for MCP tools
  */
-function jsonResponse(data: any) {
+function jsonResponse(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data) }],
   };
