@@ -45,15 +45,29 @@ function buildSystemPrompt(
 }
 
 /**
- * Read persona file from personas/ folder
+ * Result type for persona file reads
  */
-async function readPersonaFile(relativePath: string): Promise<string | null> {
+type PersonaFileResult =
+  | { success: true; content: string }
+  | { success: false; error: "not_found" | "permission_denied" | "read_error" };
+
+/**
+ * Read persona file from personas/ folder with detailed error handling
+ */
+async function readPersonaFile(relativePath: string): Promise<PersonaFileResult> {
+  const fullPath = path.join(getDataPath(), "personas", relativePath);
   try {
-    const fullPath = path.join(getDataPath(), "personas", relativePath);
     const content = await fs.readFile(fullPath, "utf-8");
-    return content;
-  } catch {
-    return null;
+    return { success: true, content };
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") {
+      return { success: false, error: "not_found" };
+    }
+    if (code === "EACCES") {
+      return { success: false, error: "permission_denied" };
+    }
+    return { success: false, error: "read_error" };
   }
 }
 
@@ -103,15 +117,20 @@ export function registerPersonaTools(server: McpServer) {
           });
         }
 
-        const personaContent = await readPersonaFile(file);
-        if (!personaContent) {
+        const fileResult = await readPersonaFile(file);
+        if (!fileResult.success) {
+          const errorMessage = fileResult.error === "not_found"
+            ? `Gym leader persona file not found. Ensure personas/${file} exists in the data directory.`
+            : fileResult.error === "permission_denied"
+            ? `Permission denied reading gym leader persona file.`
+            : `Failed to read gym leader persona file.`;
           return jsonResponse({
             success: false,
-            error: `Failed to read gym leader persona file: ${file}`,
+            error: errorMessage,
           });
         }
 
-        const systemPrompt = buildSystemPrompt(personaContent, context);
+        const systemPrompt = buildSystemPrompt(fileResult.content, context);
 
         return jsonResponse({
           success: true,
@@ -131,15 +150,20 @@ export function registerPersonaTools(server: McpServer) {
         });
       }
 
-      const personaContent = await readPersonaFile(personaDef.file);
-      if (!personaContent) {
+      const fileResult = await readPersonaFile(personaDef.file);
+      if (!fileResult.success) {
+        const errorMessage = fileResult.error === "not_found"
+          ? `Persona file not found. Ensure personas/${personaDef.file} exists in the data directory.`
+          : fileResult.error === "permission_denied"
+          ? `Permission denied reading persona file.`
+          : `Failed to read persona file.`;
         return jsonResponse({
           success: false,
-          error: `Failed to read persona file: ${personaDef.file}`,
+          error: errorMessage,
         });
       }
 
-      const systemPrompt = buildSystemPrompt(personaContent, context);
+      const systemPrompt = buildSystemPrompt(fileResult.content, context);
 
       return jsonResponse({
         success: true,
