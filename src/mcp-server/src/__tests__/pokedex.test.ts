@@ -712,6 +712,41 @@ describe("Pokedex Tools", () => {
       expect(pokedexData.stats.by_topic.docker).toBe(2);
       expect(pokedexData.stats.total_caught).toBe(2);
     });
+
+    it("should reject evolution of tier 5 (Legendary) Pokemon", async () => {
+      await createPokedexFile({
+        pokemon: [
+          {
+            id: "pokemon-001",
+            pokedex_number: 150,
+            name: "Mewtwo",
+            sprites: { front: "https://example.com/mewtwo.png" },
+            topic: "docker",
+            course: "01-introduction",
+            level: "expert",
+            tier: 5,
+            caught_at: "2026-01-11",
+            caught_during: "quiz",
+          },
+        ],
+        stats: {
+          total_caught: 1,
+          total_evolved: 0,
+          legendaries: 1,
+          by_topic: { docker: 1 },
+        },
+      });
+
+      const result = await evolvePokemon({
+        pokemonId: "pokemon-001",
+        evolvedPokedexNumber: 151,
+        evolvedName: "Super Mewtwo",
+        evolvedSprites: { front: "https://example.com/super-mewtwo.png" },
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Legendary Pokemon cannot evolve further");
+    });
   });
 
   describe("getPokedexStats", () => {
