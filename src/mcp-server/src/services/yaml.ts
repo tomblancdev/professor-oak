@@ -17,11 +17,14 @@ function getDataPath(): string {
   return process.env.DATA_PATH || "/data";
 }
 
-export interface YamlResult<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+/**
+ * Result type for YAML operations using discriminated union.
+ * When success is true, data is guaranteed to exist.
+ * When success is false, error is guaranteed to exist.
+ */
+export type YamlResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 /**
  * Read a YAML file and parse it
@@ -61,7 +64,7 @@ export async function writeYaml<T>(
     }
 
     await fs.writeFile(fullPath, content, "utf-8");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
     return {
       success: false,
@@ -90,7 +93,7 @@ export async function createDirectory(relativePath: string): Promise<YamlResult<
   try {
     const fullPath = path.join(getDataPath(), relativePath);
     await fs.mkdir(fullPath, { recursive: true });
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
     return {
       success: false,
@@ -134,7 +137,7 @@ export async function modifyYaml<T>(
         return result;
       }
     } else {
-      data = result.data!;
+      data = result.data;
     }
 
     // Apply modification
