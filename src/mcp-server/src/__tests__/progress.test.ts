@@ -742,7 +742,7 @@ describe("Progress Tools", () => {
         ],
         exercices: {},
       };
-      await writeTestYaml("src/docker/progress.yaml", progress);
+      await writeTestYaml("topics/docker/progress.yaml", progress);
       await writeTestYaml("trainer.yaml", createMockTrainerData());
 
       // Execute - try to complete item in locked level
@@ -769,7 +769,7 @@ describe("Progress Tools", () => {
         ],
         exercices: {},
       };
-      await writeTestYaml("src/docker/progress.yaml", progress);
+      await writeTestYaml("topics/docker/progress.yaml", progress);
       await writeTestYaml("trainer.yaml", createMockTrainerData());
 
       // Execute - try to complete item in pending level
@@ -788,7 +788,7 @@ describe("Progress Tools", () => {
 
     it("should allow completing items in active levels", async () => {
       // Setup - level is active
-      await writeTestYaml("src/docker/progress.yaml", createMockTopicProgress());
+      await writeTestYaml("topics/docker/progress.yaml", createMockTopicProgress());
       await writeTestYaml("trainer.yaml", createMockTrainerData());
 
       // Execute - complete item in active level (beginner is active in mock)
