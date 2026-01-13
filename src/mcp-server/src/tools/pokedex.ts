@@ -194,6 +194,15 @@ export async function evolvePokemon(input: {
     };
   }
 
+
+  // Check if Pokemon is already at max tier (Legendary - tier 5)
+  if (originalPokemon.tier >= 5) {
+    return {
+      success: false,
+      error: "Legendary Pokemon cannot evolve further - they have reached maximum tier",
+    };
+  }
+
   // Generate next ID
   const nextNumber = data.pokemon.length + 1;
   const evolvedId = `pokemon-${String(nextNumber).padStart(3, "0")}`;
