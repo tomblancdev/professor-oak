@@ -241,6 +241,30 @@ export async function submitQuizResultHandler(args: {
     };
   }
 
+  // Validate answers don't exceed total
+  if (answers.correct > answers.total) {
+    return {
+      success: false,
+      error: "Invalid answers: correct answers cannot exceed total questions",
+      passed: false,
+      score: { correct: 0, total: 0, percentage: 0 },
+      pokemon: { caught: false, name: "", message: "" },
+      points: { earned: 0 },
+    };
+  }
+
+  // Validate total matches session question count
+  if (answers.total !== session.parameters.questionCount) {
+    return {
+      success: false,
+      error: `Invalid answers: expected ${session.parameters.questionCount} questions but received ${answers.total}`,
+      passed: false,
+      score: { correct: 0, total: 0, percentage: 0 },
+      pokemon: { caught: false, name: "", message: "" },
+      points: { earned: 0 },
+    };
+  }
+
   // Calculate result
   const passed = answers.correct >= session.parameters.passCount;
   const percentage = answers.total > 0 ? Math.round((answers.correct / answers.total) * 100) : 0;
