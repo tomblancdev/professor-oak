@@ -15,8 +15,8 @@ import type { TrainerData } from "../types/trainer.js";
 import type { PokedexData, PokemonEntry } from "../types/pokedex.js";
 import type { QuizSession, QuizResult, QuizHistoryEntry } from "../types/quiz.js";
 
-// In-memory session storage
-export const quizSessions = new Map<string, QuizSession>();
+// Session persistence service
+import { getSession, saveSession, removeSession } from "../services/quiz-sessions.js";
 
 // Pokemon by tier (simplified)
 export const pokemonByTier: Record<number, Array<{ id: number; name: string }>> = {
@@ -202,7 +202,7 @@ export async function startQuizHandler(args: {
   };
 
   // Store session
-  quizSessions.set(sessionId, session);
+  await saveSession(session);
 
   return {
     success: true,
@@ -229,7 +229,7 @@ export async function submitQuizResultHandler(args: {
   const { sessionId, answers } = args;
 
   // Get session
-  const session = quizSessions.get(sessionId);
+  const session = await getSession(sessionId);
   if (!session) {
     return {
       success: false,
@@ -366,7 +366,7 @@ export async function submitQuizResultHandler(args: {
   await writeYaml(historyPath, historyData, "Quiz History");
 
   // Remove session
-  quizSessions.delete(sessionId);
+  await removeSession(sessionId);
 
   // Prepare response
   const pokemonMessage = passed

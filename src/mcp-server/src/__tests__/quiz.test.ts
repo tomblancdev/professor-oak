@@ -17,9 +17,9 @@ import {
   startQuizHandler,
   submitQuizResultHandler,
   getQuizHistoryHandler,
-  quizSessions,
   pokemonByTier,
 } from "../tools/quiz.js";
+import { clearAllSessions, resetLoadedState, getSession, hasSession } from "../services/quiz-sessions.js";
 import type { TopicProgress } from "../types/progress.js";
 import type { TrainerData } from "../types/trainer.js";
 import type { PokedexData } from "../types/pokedex.js";
@@ -124,7 +124,7 @@ describe("Quiz Tools", () => {
     // Create test directory
     await fs.mkdir(TEST_DATA_PATH, { recursive: true });
     // Clear sessions between tests
-    quizSessions.clear();
+    await clearAllSessions(); resetLoadedState();
   });
 
   afterEach(async () => {
@@ -209,8 +209,8 @@ describe("Quiz Tools", () => {
 
       // Verify
       expect(result.success).toBe(true);
-      expect(quizSessions.has(result.sessionId)).toBe(true);
-      const session = quizSessions.get(result.sessionId);
+      expect(await hasSession(result.sessionId)).toBe(true);
+      const session = await getSession(result.sessionId);
       expect(session?.topic).toBe("docker");
     });
 
@@ -223,7 +223,7 @@ describe("Quiz Tools", () => {
 
       // Verify
       expect(result.success).toBe(true);
-      const session = quizSessions.get(result.sessionId);
+      const session = await getSession(result.sessionId);
       expect(session?.course).toBe("01-first-container");
     });
 
@@ -236,7 +236,7 @@ describe("Quiz Tools", () => {
 
       // Verify
       expect(result.success).toBe(true);
-      const session = quizSessions.get(result.sessionId);
+      const session = await getSession(result.sessionId);
       expect(session?.type).toBe("wild");
     });
 
@@ -264,7 +264,7 @@ describe("Quiz Tools", () => {
 
       // Start a quiz first
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const passCount = session.parameters.passCount;
 
       // Execute - pass the quiz
@@ -287,7 +287,7 @@ describe("Quiz Tools", () => {
 
       // Start a quiz first
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
 
       // Execute - fail the quiz (0 correct)
       const result = await submitQuizResultHandler({
@@ -310,7 +310,7 @@ describe("Quiz Tools", () => {
 
       // Start and pass quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const passCount = session.parameters.passCount;
 
       const result = await submitQuizResultHandler({
@@ -333,7 +333,7 @@ describe("Quiz Tools", () => {
 
       // Start and complete quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
 
       await submitQuizResultHandler({
         sessionId: startResult.sessionId,
@@ -368,7 +368,7 @@ describe("Quiz Tools", () => {
 
       // Start and pass quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const passCount = session.parameters.passCount;
 
       const result = await submitQuizResultHandler({
@@ -389,7 +389,7 @@ describe("Quiz Tools", () => {
 
       // Start and pass quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const passCount = session.parameters.passCount;
 
       await submitQuizResultHandler({
@@ -413,8 +413,8 @@ describe("Quiz Tools", () => {
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
       const sessionId = startResult.sessionId;
-      const session = quizSessions.get(sessionId)!;
-      expect(quizSessions.has(sessionId)).toBe(true);
+      const session = (await getSession(sessionId))!;
+      expect(await hasSession(sessionId)).toBe(true);
 
       // Submit result
       await submitQuizResultHandler({
@@ -423,7 +423,7 @@ describe("Quiz Tools", () => {
       });
 
       // Verify session removed
-      expect(quizSessions.has(sessionId)).toBe(false);
+      expect(await hasSession(sessionId)).toBe(false);
     });
 
     it("should include point breakdown", async () => {
@@ -434,7 +434,7 @@ describe("Quiz Tools", () => {
 
       // Start and pass quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const passCount = session.parameters.passCount;
 
       const result = await submitQuizResultHandler({
@@ -479,7 +479,7 @@ describe("Quiz Tools", () => {
 
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
       const expectedQuestions = session.parameters.questionCount;
 
       // Submit with wrong total
@@ -500,7 +500,7 @@ describe("Quiz Tools", () => {
 
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
 
       // Submit with valid answers
       const result = await submitQuizResultHandler({
@@ -694,7 +694,7 @@ describe("Quiz Tools", () => {
         const result = await startQuizHandler({ topic: "docker" });
         if (result.success) {
           names.add(result.pokemon.name);
-          quizSessions.clear();
+          await clearAllSessions(); resetLoadedState();
         }
       }
 
@@ -712,7 +712,7 @@ describe("Quiz Tools", () => {
 
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
 
       // Execute - perfect score
       const result = await submitQuizResultHandler({
@@ -734,7 +734,7 @@ describe("Quiz Tools", () => {
 
       // Start quiz
       const startResult = await startQuizHandler({ topic: "docker" });
-      const session = quizSessions.get(startResult.sessionId)!;
+      const session = (await getSession(startResult.sessionId))!;
 
       // Execute - zero correct
       const result = await submitQuizResultHandler({
