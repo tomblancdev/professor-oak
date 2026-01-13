@@ -17,6 +17,23 @@ function getDataPath(): string {
   return process.env.DATA_PATH || "/data";
 }
 
+/**
+ * Sanitize error messages to avoid exposing internal file paths.
+ * Returns user-friendly error messages based on error codes.
+ */
+function sanitizeError(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return "File not found";
+    if (code === "EACCES") return "Permission denied";
+    if (code === "EEXIST") return "Already exists";
+    if (code === "EISDIR") return "Is a directory";
+    if (code === "ENOTDIR") return "Not a directory";
+    return "Operation failed";
+  }
+  return "Operation failed";
+}
+
 export interface YamlResult<T> {
   success: boolean;
   data?: T;
@@ -35,7 +52,7 @@ export async function readYaml<T>(relativePath: string): Promise<YamlResult<T>> 
   } catch (error) {
     return {
       success: false,
-      error: `Failed to read ${relativePath}: ${error}`
+      error: `Failed to read ${relativePath}: ${sanitizeError(error)}`
     };
   }
 }
@@ -65,7 +82,7 @@ export async function writeYaml<T>(
   } catch (error) {
     return {
       success: false,
-      error: `Failed to write ${relativePath}: ${error}`
+      error: `Failed to write ${relativePath}: ${sanitizeError(error)}`
     };
   }
 }
@@ -94,61 +111,7 @@ export async function createDirectory(relativePath: string): Promise<YamlResult<
   } catch (error) {
     return {
       success: false,
-      error: `Failed to create directory ${relativePath}: ${error}`
+      error: `Failed to create directory ${relativePath}: ${sanitizeError(error)}`
     };
   }
-}
-
-// Import lock functions for atomic operations
-import { withFileLock, withMultiFileLock } from "./lock.js";
-
-// Re-export lock functions for convenience
-export { withFileLock, withMultiFileLock };
-
-/**
- * Atomically read, modify, and write a YAML file with locking.
- * This is the recommended way to update YAML files to prevent race conditions.
- *
- * @param relativePath - The file path to modify
- * @param modifier - Function that receives current data and returns modified data
- * @param options - Optional settings (defaultData, header)
- * @returns The result with the modified data
- */
-export async function modifyYaml<T>(
-  relativePath: string,
-  modifier: (data: T) => T | Promise<T>,
-  options?: {
-    defaultData?: T;
-    header?: string;
-  }
-): Promise<YamlResult<T>> {
-  return withFileLock(relativePath, async () => {
-    // Read current data
-    const result = await readYaml<T>(relativePath);
-    let data: T;
-
-    if (!result.success) {
-      if (options?.defaultData !== undefined) {
-        data = options.defaultData;
-      } else {
-        return result;
-      }
-    } else {
-      data = result.data!;
-    }
-
-    // Apply modification
-    data = await modifier(data);
-
-    // Write updated data
-    const writeResult = await writeYaml(relativePath, data, options?.header);
-    if (!writeResult.success) {
-      return {
-        success: false,
-        error: writeResult.error
-      };
-    }
-
-    return { success: true, data };
-  });
 }
